@@ -1,0 +1,6 @@
+<Configuration>
+<!--
+	<Include ref="Configuration_weather.xml"/>
+	<Include ref="Configuration_weatherscheduler.xml"/>
+-->
+</Configuration>
