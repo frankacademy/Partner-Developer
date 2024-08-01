@@ -28,11 +28,12 @@
 				<Forward name="true" path="Map response" />
 				<Forward name="false" path="Return error message" />
 			</XmlSwitchPipe>
-			<FixedResultPipe name="Return error message"
-				returnString="Temperature not found in response of api.openweathermap.org"
+			<EchoPipe 
+				name="Return error message"
+				getInputFromFixedValue="Temperature not found in response of api.openweathermap.org"
 				>
 				<Forward name="false" path="InternalServerError" />
-			</FixedResultPipe>
+			</EchoPipe>
 
 
 			<XsltPipe name="Map response"
@@ -49,9 +50,9 @@
 					contentType="application/json"
 				/>
 			</SenderPipe>
-			<FixedResultPipe
+			<EchoPipe
 				name="Return success message"
-				returnString="ThingsBoard updated"
+				getInputFromFixedValue="ThingsBoard updated"
 			/>
 			
 		</Pipeline>
