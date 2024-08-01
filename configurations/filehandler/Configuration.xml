@@ -1,4 +1,4 @@
 <Configuration>
 	<Include ref="Configuration_directorylistener.xml"/>
-		<Include ref="Configuration_DLexamples.xml" />
+	<Include ref="Configuration_DLexamples.xml" />
 </Configuration>
