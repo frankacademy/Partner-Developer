@@ -16,7 +16,9 @@
 				<Exit name="READY" state="SUCCESS"  />
 
 			</Exits>
-			
+			<CsvParserPipe name="parsecsv" fieldSeparator=";">
+				
+			</CsvParserPipe>
 			<EchoPipe 
 				name="Return success message"
 				getInputFromFixedValue="file found and processed successfully"
