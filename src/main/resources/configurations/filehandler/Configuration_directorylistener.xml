@@ -17,7 +17,7 @@
 
 			</Exits>
 			
-			<EchoPipe 
+			<JeroenPipe 
 				name="Return success message"
 				getInputFromFixedValue="file found and processed successfully"
 			/>
