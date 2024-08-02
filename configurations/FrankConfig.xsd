@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="8.2.0">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="8.3.0-20240730.042429">
   <xs:element name="Configuration">
     <xs:annotation>
       <xs:documentation>Container of Adapters that belong together.
@@ -3820,6 +3820,76 @@
           </xs:complexContent>
         </xs:complexType>
       </xs:element>
+      <xs:element name="FrankSender">
+        <xs:annotation>
+          <xs:documentation>Sender to send a message to another Frank! Adapter, or an external program running in the same JVM as the Frank!Framework.
+ &lt;p&gt;
+ Sends a message to another Frank!Framework-adapter in the same Frank!Framework instance, or an external program running in
+ the same JVM as the Frank!Framework. If the callee exits with an {@code &lt;Exit/&gt;} that has state PipeLine.ExitState#ERROR,
+ an error is considered to happen in the caller which means that the {@code exception} forward is followed if it is present.
+ &lt;/p&gt;
+ &lt;p&gt;
+ Returns {@code exit.code} as forward name to the SenderPipe, provided that {@code exit.code} can be parsed as integer.
+ For example, if the called adapter has an exit state with code
+ {@code 2}, then the SenderPipe supports a forward with name {@code 2}
+ that is followed when the called adapter exits with the mentioned exit. This does not work if the code is for example {@code c2}.
+ &lt;/p&gt;
+ &lt;p&gt;
+ A FrankSender makes a call to either an Adapter or an external program by setting the #scope. By default the scope is {@code ADAPTER}.
+ &lt;/p&gt;
+
+
+ &lt;h3&gt;Configuration of the Adapter to be called&lt;/h3&gt;
+ A call to another Adapter in the same Frank!Framework instance is preferably made using the combination
+ of a FrankSender configured with the name of the adapter.
+
+ &lt;h4&gt;Configuring FrankSender and Adapter&lt;/h4&gt;
+ &lt;ul&gt;
+   &lt;li&gt;Define a SenderPipe with a FrankSender&lt;/li&gt;
+   &lt;li&gt;Set the attribute {@code target} to &lt;i&gt;targetAdapterName&lt;/i&gt;&lt;/li&gt;
+   &lt;li&gt;If the adapter is in another Configuration deployed in the same Frank!Framework instance, then set {@code target} to {@code targetConfigurationName/targetAdapterName} (not the slash-separator between Configuration name and Adapter name).&lt;/li&gt;
+ &lt;/ul&gt;
+ In the Adapter to be called:
+ &lt;ul&gt;
+   &lt;li&gt;The adapter does not need to have a receiver configured to be called from a FrankSender,&lt;/li&gt;
+   &lt;li&gt;The adapter will run in the same transaction as the calling adapter,&lt;/li&gt;
+   &lt;li&gt;If the called adapter does not to run in its own transaction, set the transaction attributes on the PipeLine attribute of this adapter
+   or on the SenderPipe that contains this {@code FrankSender}.&lt;/li&gt;
+ &lt;/ul&gt;
+
+ &lt;h4&gt;Configuring FrankSender and Remote Application&lt;/h4&gt;
+ &lt;em&gt;NB:&lt;/em&gt; Please make sure that the IbisServiceDispatcher-1.4.jar or newer is present on the class path of the server. For more information, see:
+ &lt;ul&gt;
+     &lt;li&gt;Define a SenderPipe with a FrankSender&lt;/li&gt;
+     &lt;li&gt;Set the attribute {@code scope} to either {@code JVM} for a Java application, or to {@code DLL} for code loaded from a DLL&lt;/li&gt;
+     &lt;li&gt;Set the attribute {@code target} to the service-name the other application used to register itself&lt;/li&gt;
+ &lt;/ul&gt;
+ In the other application:
+ &lt;ul&gt;
+     &lt;li&gt;Implement the interface {@code nl.nn.adapterframework.dispatcher.RequestProcessor} from the IbisServiceDispatcher library&lt;/li&gt;
+     &lt;li&gt;Register the instance with the {@code nl.nn.adapterframework.dispatcher.DispatcherManager} obtained via the {@code nl.nn.adapterframework.dispatcher.DispatcherManagerFactory}&lt;/li&gt;
+     &lt;li&gt;See the implementation code of the {@code JavaListener} in the Frank!Framework for an example&lt;/li&gt;
+ &lt;/ul&gt;
+ See also the repository of the IbisServiceDispatcher:
+  &lt;a href="https://github.com/frankframework/servicedispatcher"&gt;https://github.com/frankframework/servicedispatcher&lt;/a&gt;
+
+ &lt;h4&gt;Using FrankSender to call an adapter from Larva tests&lt;/h4&gt;
+ You can configure a FrankSender in Larva property files to use the FrankSender to invoke an adapter to test. When doing this, keep the following in mind:
+ &lt;ul&gt;
+     &lt;li&gt;If you leave the default scope as {@code ADAPTER}, then the {@code target} property needs to have both configuration name and adapter name, separated by a {@code /} character&lt;/li&gt;
+     &lt;li&gt;When scope is left as default, the receiver and JavaListener are skipped and no transaction is started unless it is set on the adapter's {@code PipeLine}&lt;/li&gt;
+     &lt;li&gt;If you do need a transaction and the adapter has a JavaListener that has org.frankframework.receivers.JavaListener#setServiceName(String) defined, you can use the FrankSender with scope {@code JVM}
+     and set the {@code target} attribute to the {@code serviceName} attribute of the {@code JavaListener}.&lt;/li&gt;
+ &lt;/ul&gt;</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:complexContent>
+            <xs:extension base="FrankSenderType">
+              <xs:attribute name="elementRole" type="xs:string" fixed="sender" use="prohibited" />
+            </xs:extension>
+          </xs:complexContent>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="FtpFileSystemSender">
         <xs:complexType>
           <xs:complexContent>
@@ -3876,14 +3946,18 @@
       </xs:element>
       <xs:element name="IbisJavaSender">
         <xs:annotation>
-          <xs:documentation>Posts a message to another IBIS-adapter or application in the same JVM using IbisServiceDispatcher.
-
+          <xs:documentation>Posts a message to another Frank!Framework-adapter or an application in the same JVM using IbisServiceDispatcher.
+ &lt;p&gt;
  An IbisJavaSender makes a call to a Receiver with a JavaListener
  or any other application in the same JVM that has registered a &lt;code&gt;RequestProcessor&lt;/code&gt; with the IbisServiceDispatcher.
-
+ &lt;/p&gt;
+ The IbisJavaSender is now considered to be legacy. The new way to call another adapter or java application from your own
+ adapter is by using the FrankSender.
+ &lt;/p&gt;
  &lt;h4&gt;configuring IbisJavaSender and JavaListener&lt;/h4&gt;
  &lt;ul&gt;
-   &lt;li&gt;Define a SenderPipe with an IbisJavaSender&lt;/li&gt;
+   &lt;li&gt;&lt;em&gt;NB:&lt;/em&gt; Using IbisJavaSender to call another adapter is inefficient and therefore not recommended. It is much more efficient to use for this a FrankSender or IbisLocalSender.&lt;/li&gt;
+   &lt;li&gt;Define a org.frankframework.pipes.SenderPipe with an IbisJavaSender&lt;/li&gt;
    &lt;li&gt;Set the attribute &lt;code&gt;serviceName&lt;/code&gt; to &lt;i&gt;yourExternalServiceName&lt;/i&gt;&lt;/li&gt;
  &lt;/ul&gt;
  In the Adapter to be called:
@@ -3891,7 +3965,8 @@
    &lt;li&gt;Define a Receiver with a JavaListener&lt;/li&gt;
    &lt;li&gt;Set the attribute &lt;code&gt;serviceName&lt;/code&gt; to &lt;i&gt;yourExternalServiceName&lt;/i&gt;&lt;/li&gt;
  &lt;/ul&gt;
- N.B. Please make sure that the IbisServiceDispatcher-1.4.jar or newer is present on the class path of the server.</xs:documentation>
+ N.B. Please make sure that the IbisServiceDispatcher-1.4.jar or newer is present on the class path of the server. For more information, see:
+  &lt;a href="https://github.com/frankframework/servicedispatcher"&gt;https://github.com/frankframework/servicedispatcher&lt;/a&gt;</xs:documentation>
         </xs:annotation>
         <xs:complexType>
           <xs:complexContent>
@@ -3903,24 +3978,27 @@
       </xs:element>
       <xs:element name="IbisLocalSender">
         <xs:annotation>
-          <xs:documentation>Posts a message to another IBIS-adapter in the same IBIS instance. If the callee exits with an &amp;lt;&lt;code&gt;exit&lt;/code&gt;&amp;gt;
+          <xs:documentation>Posts a message to another Frank!Framework-adapter in the same Frank!Framework instance. If the callee exits with an &amp;lt;&lt;code&gt;exit&lt;/code&gt;&amp;gt;
  that has state PipeLine.ExitState#ERROR, an error is considered to happen
  in the caller which means that the &lt;code&gt;exception&lt;/code&gt; forward is followed if it is present.
- &lt;p/&gt;
- &lt;p/&gt;
+ &lt;p&gt;
+ The IbisLocalSender is now considered to be legacy. The new way to call another adapter from your own
+ adapter is by using the FrankSender.
+ &lt;/p&gt;
+ &lt;p&gt;
  Returns exit.code as forward name to SenderPipe provided that exit.code can be parsed as integer.
  For example, if the called adapter has an exit state with code
  &lt;code&gt;2&lt;/code&gt;, then the SenderPipe supports a forward with name &lt;code&gt;2&lt;/code&gt;
  that is followed when the called adapter exits with the mentioned exit. This does not work if the code is for example &lt;code&gt;c2&lt;/code&gt;.
- &lt;p/&gt;
- &lt;p/&gt;
- An IbisLocalSender makes a call to a Receiver with either a WebServiceListener
+ &lt;/p&gt;
+ &lt;p&gt;
+ An IbisLocalSender makes a call to a org.frankframework.receivers.Receiver with either a WebServiceListener
  or a JavaListener.
-
+ &lt;/p&gt;
 
 
  &lt;h3&gt;Configuration of the Adapter to be called&lt;/h3&gt;
- A call to another Adapter in the same IBIS instance is preferably made using the combination
+ A call to another Adapter in the same Frank!Framework instance is preferably made using the combination
  of an IbisLocalSender and a JavaListener. If,
  however, a Receiver with a WebServiceListener is already present, that can be used in some cases, too.
 
@@ -3935,7 +4013,7 @@
    &lt;li&gt;Define a Receiver with a JavaListener&lt;/li&gt;
    &lt;li&gt;Set the attribute &lt;code&gt;name&lt;/code&gt; to &lt;i&gt;yourServiceName&lt;/i&gt;&lt;/li&gt;
    &lt;li&gt;Do not set the attribute &lt;code&gt;serviceName&lt;/code&gt;, except if the service is to be called also
-       from applications other than this IBIS-instance&lt;/li&gt;
+       from applications other than this Frank!Framework-instance&lt;/li&gt;
  &lt;/ul&gt;
 
  &lt;h4&gt;configuring IbisLocalSender and WebServiceListener&lt;/h4&gt;
@@ -4856,12 +4934,12 @@
     </xs:attribute>
     <xs:attribute name="forceGlobalBucketAccessEnabled" type="frankBoolean">
       <xs:annotation>
-        <xs:documentation>Set whether the client should be configured with global bucket access enabled. Default: false</xs:documentation>
+        <xs:documentation>Option to enable or disable the usage of multi-region access point ARNs. Default: false</xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="clientRegion" type="xs:string" use="required">
       <xs:annotation>
-        <xs:documentation>Name of the region that the client will be created from Default: eu-west-1</xs:documentation>
+        <xs:documentation>Name of the AWS region that the client is using. Default: eu-west-1</xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="bucketName" type="xs:string">
@@ -4886,7 +4964,7 @@
     </xs:attribute>
     <xs:attribute name="maxConnections" type="frankInt">
       <xs:annotation>
-        <xs:documentation>Maximum concurrent connections towards S3</xs:documentation>
+        <xs:documentation>Maximum concurrent connections towards S3 Default: 50</xs:documentation>
       </xs:annotation>
     </xs:attribute>
   </xs:attributeGroup>
@@ -5767,6 +5845,54 @@
   </xs:attributeGroup>
   <xs:attributeGroup name="FixedResultSenderCumulativeAttributeGroup">
     <xs:attributeGroup ref="FixedResultSenderDeclaredAttributeGroup" />
+    <xs:attributeGroup ref="SenderBaseDeclaredAttributeGroup" />
+  </xs:attributeGroup>
+  <xs:complexType name="FrankSenderType">
+    <xs:group ref="SenderWithParametersBaseDeclaredChildGroup" />
+    <xs:attributeGroup ref="FrankSenderCumulativeAttributeGroup" />
+    <xs:attribute name="className" type="xs:string" fixed="org.frankframework.senders.FrankSender" use="prohibited" />
+  </xs:complexType>
+  <xs:attributeGroup name="FrankSenderDeclaredAttributeGroup">
+    <xs:attribute name="synchronous" type="frankBoolean">
+      <xs:annotation>
+        <xs:documentation>Synchronous or Asynchronous execution of the call to other adapter or system.
+ &lt;br/&gt;
+ Set to &lt;code&gt;false&lt;/code&gt; to make the call asynchronously. This means that the current adapter
+ continues with the next pipeline and the result of the sub-adapter that was called, or other system that was called,
+ is ignored. Instead, the input message will be returned as the result message. Default: true</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="scope">
+      <xs:annotation>
+        <xs:documentation>Scope decides if the FrankSender calls another adapter, or another Java program running in the same JVM.
+ &lt;br/&gt;
+ It is possible to set this via a parameter. If the parameter is defined but the value at runtime
+ is empty, then the value set via this attribute will be used as default. Default: ADAPTER</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:union memberTypes="ScopeAttributeValuesType variableRef" />
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="target" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Target: service-name of service in other application that should be called, or name of adapter to be called.
+ If the adapter is in another configuration, prefix the adapter name with the name of that configuration and a slash ("{@code /}").
+ &lt;br/&gt;
+ It is possible to set a target at runtime via a parameter.
+ &lt;br/&gt;
+ If a parameter with name target exists but has no value, then the target configured
+ via the attribute will be used as a default.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="returnedSessionKeys" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Comma separated list of keys of session variables that will be returned to caller, for correct results as well as for erroneous results.
+ The set of available sessionKeys to be returned might be limited by the returnedSessionKeys attribute of the corresponding JavaListener.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="FrankSenderCumulativeAttributeGroup">
+    <xs:attributeGroup ref="FrankSenderDeclaredAttributeGroup" />
     <xs:attributeGroup ref="SenderBaseDeclaredAttributeGroup" />
   </xs:attributeGroup>
   <xs:complexType name="FtpFileSystemSenderType">
@@ -8629,6 +8755,76 @@
           </xs:complexContent>
         </xs:complexType>
       </xs:element>
+      <xs:element name="FrankErrorSender">
+        <xs:annotation>
+          <xs:documentation>Sender to send a message to another Frank! Adapter, or an external program running in the same JVM as the Frank!Framework.
+ &lt;p&gt;
+ Sends a message to another Frank!Framework-adapter in the same Frank!Framework instance, or an external program running in
+ the same JVM as the Frank!Framework. If the callee exits with an {@code &lt;Exit/&gt;} that has state PipeLine.ExitState#ERROR,
+ an error is considered to happen in the caller which means that the {@code exception} forward is followed if it is present.
+ &lt;/p&gt;
+ &lt;p&gt;
+ Returns {@code exit.code} as forward name to the SenderPipe, provided that {@code exit.code} can be parsed as integer.
+ For example, if the called adapter has an exit state with code
+ {@code 2}, then the SenderPipe supports a forward with name {@code 2}
+ that is followed when the called adapter exits with the mentioned exit. This does not work if the code is for example {@code c2}.
+ &lt;/p&gt;
+ &lt;p&gt;
+ A FrankSender makes a call to either an Adapter or an external program by setting the #scope. By default the scope is {@code ADAPTER}.
+ &lt;/p&gt;
+
+
+ &lt;h3&gt;Configuration of the Adapter to be called&lt;/h3&gt;
+ A call to another Adapter in the same Frank!Framework instance is preferably made using the combination
+ of a FrankSender configured with the name of the adapter.
+
+ &lt;h4&gt;Configuring FrankSender and Adapter&lt;/h4&gt;
+ &lt;ul&gt;
+   &lt;li&gt;Define a SenderPipe with a FrankSender&lt;/li&gt;
+   &lt;li&gt;Set the attribute {@code target} to &lt;i&gt;targetAdapterName&lt;/i&gt;&lt;/li&gt;
+   &lt;li&gt;If the adapter is in another Configuration deployed in the same Frank!Framework instance, then set {@code target} to {@code targetConfigurationName/targetAdapterName} (not the slash-separator between Configuration name and Adapter name).&lt;/li&gt;
+ &lt;/ul&gt;
+ In the Adapter to be called:
+ &lt;ul&gt;
+   &lt;li&gt;The adapter does not need to have a receiver configured to be called from a FrankSender,&lt;/li&gt;
+   &lt;li&gt;The adapter will run in the same transaction as the calling adapter,&lt;/li&gt;
+   &lt;li&gt;If the called adapter does not to run in its own transaction, set the transaction attributes on the PipeLine attribute of this adapter
+   or on the SenderPipe that contains this {@code FrankSender}.&lt;/li&gt;
+ &lt;/ul&gt;
+
+ &lt;h4&gt;Configuring FrankSender and Remote Application&lt;/h4&gt;
+ &lt;em&gt;NB:&lt;/em&gt; Please make sure that the IbisServiceDispatcher-1.4.jar or newer is present on the class path of the server. For more information, see:
+ &lt;ul&gt;
+     &lt;li&gt;Define a SenderPipe with a FrankSender&lt;/li&gt;
+     &lt;li&gt;Set the attribute {@code scope} to either {@code JVM} for a Java application, or to {@code DLL} for code loaded from a DLL&lt;/li&gt;
+     &lt;li&gt;Set the attribute {@code target} to the service-name the other application used to register itself&lt;/li&gt;
+ &lt;/ul&gt;
+ In the other application:
+ &lt;ul&gt;
+     &lt;li&gt;Implement the interface {@code nl.nn.adapterframework.dispatcher.RequestProcessor} from the IbisServiceDispatcher library&lt;/li&gt;
+     &lt;li&gt;Register the instance with the {@code nl.nn.adapterframework.dispatcher.DispatcherManager} obtained via the {@code nl.nn.adapterframework.dispatcher.DispatcherManagerFactory}&lt;/li&gt;
+     &lt;li&gt;See the implementation code of the {@code JavaListener} in the Frank!Framework for an example&lt;/li&gt;
+ &lt;/ul&gt;
+ See also the repository of the IbisServiceDispatcher:
+  &lt;a href="https://github.com/frankframework/servicedispatcher"&gt;https://github.com/frankframework/servicedispatcher&lt;/a&gt;
+
+ &lt;h4&gt;Using FrankSender to call an adapter from Larva tests&lt;/h4&gt;
+ You can configure a FrankSender in Larva property files to use the FrankSender to invoke an adapter to test. When doing this, keep the following in mind:
+ &lt;ul&gt;
+     &lt;li&gt;If you leave the default scope as {@code ADAPTER}, then the {@code target} property needs to have both configuration name and adapter name, separated by a {@code /} character&lt;/li&gt;
+     &lt;li&gt;When scope is left as default, the receiver and JavaListener are skipped and no transaction is started unless it is set on the adapter's {@code PipeLine}&lt;/li&gt;
+     &lt;li&gt;If you do need a transaction and the adapter has a JavaListener that has org.frankframework.receivers.JavaListener#setServiceName(String) defined, you can use the FrankSender with scope {@code JVM}
+     and set the {@code target} attribute to the {@code serviceName} attribute of the {@code JavaListener}.&lt;/li&gt;
+ &lt;/ul&gt;</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:complexContent>
+            <xs:extension base="FrankSenderType">
+              <xs:attribute name="elementRole" type="xs:string" fixed="errorSender" use="prohibited" />
+            </xs:extension>
+          </xs:complexContent>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="FtpFileSystemErrorSender">
         <xs:complexType>
           <xs:complexContent>
@@ -8685,14 +8881,18 @@
       </xs:element>
       <xs:element name="IbisJavaErrorSender">
         <xs:annotation>
-          <xs:documentation>Posts a message to another IBIS-adapter or application in the same JVM using IbisServiceDispatcher.
-
+          <xs:documentation>Posts a message to another Frank!Framework-adapter or an application in the same JVM using IbisServiceDispatcher.
+ &lt;p&gt;
  An IbisJavaSender makes a call to a Receiver with a JavaListener
  or any other application in the same JVM that has registered a &lt;code&gt;RequestProcessor&lt;/code&gt; with the IbisServiceDispatcher.
-
+ &lt;/p&gt;
+ The IbisJavaSender is now considered to be legacy. The new way to call another adapter or java application from your own
+ adapter is by using the FrankSender.
+ &lt;/p&gt;
  &lt;h4&gt;configuring IbisJavaSender and JavaListener&lt;/h4&gt;
  &lt;ul&gt;
-   &lt;li&gt;Define a SenderPipe with an IbisJavaSender&lt;/li&gt;
+   &lt;li&gt;&lt;em&gt;NB:&lt;/em&gt; Using IbisJavaSender to call another adapter is inefficient and therefore not recommended. It is much more efficient to use for this a FrankSender or IbisLocalSender.&lt;/li&gt;
+   &lt;li&gt;Define a org.frankframework.pipes.SenderPipe with an IbisJavaSender&lt;/li&gt;
    &lt;li&gt;Set the attribute &lt;code&gt;serviceName&lt;/code&gt; to &lt;i&gt;yourExternalServiceName&lt;/i&gt;&lt;/li&gt;
  &lt;/ul&gt;
  In the Adapter to be called:
@@ -8700,7 +8900,8 @@
    &lt;li&gt;Define a Receiver with a JavaListener&lt;/li&gt;
    &lt;li&gt;Set the attribute &lt;code&gt;serviceName&lt;/code&gt; to &lt;i&gt;yourExternalServiceName&lt;/i&gt;&lt;/li&gt;
  &lt;/ul&gt;
- N.B. Please make sure that the IbisServiceDispatcher-1.4.jar or newer is present on the class path of the server.</xs:documentation>
+ N.B. Please make sure that the IbisServiceDispatcher-1.4.jar or newer is present on the class path of the server. For more information, see:
+  &lt;a href="https://github.com/frankframework/servicedispatcher"&gt;https://github.com/frankframework/servicedispatcher&lt;/a&gt;</xs:documentation>
         </xs:annotation>
         <xs:complexType>
           <xs:complexContent>
@@ -8712,24 +8913,27 @@
       </xs:element>
       <xs:element name="IbisLocalErrorSender">
         <xs:annotation>
-          <xs:documentation>Posts a message to another IBIS-adapter in the same IBIS instance. If the callee exits with an &amp;lt;&lt;code&gt;exit&lt;/code&gt;&amp;gt;
+          <xs:documentation>Posts a message to another Frank!Framework-adapter in the same Frank!Framework instance. If the callee exits with an &amp;lt;&lt;code&gt;exit&lt;/code&gt;&amp;gt;
  that has state PipeLine.ExitState#ERROR, an error is considered to happen
  in the caller which means that the &lt;code&gt;exception&lt;/code&gt; forward is followed if it is present.
- &lt;p/&gt;
- &lt;p/&gt;
+ &lt;p&gt;
+ The IbisLocalSender is now considered to be legacy. The new way to call another adapter from your own
+ adapter is by using the FrankSender.
+ &lt;/p&gt;
+ &lt;p&gt;
  Returns exit.code as forward name to SenderPipe provided that exit.code can be parsed as integer.
  For example, if the called adapter has an exit state with code
  &lt;code&gt;2&lt;/code&gt;, then the SenderPipe supports a forward with name &lt;code&gt;2&lt;/code&gt;
  that is followed when the called adapter exits with the mentioned exit. This does not work if the code is for example &lt;code&gt;c2&lt;/code&gt;.
- &lt;p/&gt;
- &lt;p/&gt;
- An IbisLocalSender makes a call to a Receiver with either a WebServiceListener
+ &lt;/p&gt;
+ &lt;p&gt;
+ An IbisLocalSender makes a call to a org.frankframework.receivers.Receiver with either a WebServiceListener
  or a JavaListener.
-
+ &lt;/p&gt;
 
 
  &lt;h3&gt;Configuration of the Adapter to be called&lt;/h3&gt;
- A call to another Adapter in the same IBIS instance is preferably made using the combination
+ A call to another Adapter in the same Frank!Framework instance is preferably made using the combination
  of an IbisLocalSender and a JavaListener. If,
  however, a Receiver with a WebServiceListener is already present, that can be used in some cases, too.
 
@@ -8744,7 +8948,7 @@
    &lt;li&gt;Define a Receiver with a JavaListener&lt;/li&gt;
    &lt;li&gt;Set the attribute &lt;code&gt;name&lt;/code&gt; to &lt;i&gt;yourServiceName&lt;/i&gt;&lt;/li&gt;
    &lt;li&gt;Do not set the attribute &lt;code&gt;serviceName&lt;/code&gt;, except if the service is to be called also
-       from applications other than this IBIS-instance&lt;/li&gt;
+       from applications other than this Frank!Framework-instance&lt;/li&gt;
  &lt;/ul&gt;
 
  &lt;h4&gt;configuring IbisLocalSender and WebServiceListener&lt;/h4&gt;
@@ -17658,6 +17862,13 @@
           <xs:documentation>do not automatically set the correlationId of the message sent, but use use the value found in that header after sending the message as the selector for response messages</xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ScopeAttributeValuesType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="JVM" />
+      <xs:enumeration value="DLL" />
+      <xs:enumeration value="ADAPTER" />
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="PostTypeAttributeValuesType">

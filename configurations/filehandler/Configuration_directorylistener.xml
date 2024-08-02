@@ -16,9 +16,20 @@
 				<Exit name="READY" state="SUCCESS"  />
 
 			</Exits>
-			<CsvParserPipe name="parsecsv" fieldSeparator=";" prettyPrint="true">
+			<CsvParserPipe name="parsecsv" fieldSeparator=";" prettyPrint="true"/>
 
-			</CsvParserPipe>
+			<ForEachChildElementPipe name="xmlIterator" elementXPathExpression="csv/record">
+                <FixedQuerySender query="INSERT INTO PEOPLE (IDENTIFIER, ACCESSCODE , RECOVERYCODE , FIRSTNAME , LASTNAME , DEPARTMENT , LOCATION) VALUES(?{IDENTIFIER}, ?{ACCESSCODE} , ?{RECOVERYCODE} , ?{FIRSTNAME} , ?{LASTNAME} , ?{DEPARTMENT} , ?{LOCATION})">
+                    <Param name="IDENTIFIER"         xpathExpression="record/Indentifier"/>
+                    <Param name="ACCESSCODE"   xpathExpression="record/AccessCode"/>
+                    <Param name="RECOVERYCODE"    xpathExpression="record/RecoveryCode"/>
+                    <Param name="FIRSTNAME"     xpathExpression="record/FirstName"/>
+                    <Param name="LASTNAME"       xpathExpression="record/LastName"/>
+                    <Param name="DEPARTMENT"          xpathExpression="record/Department"/>
+                    <Param name="LOCATION"       xpathExpression="record/location"/>
+                </FixedQuerySender>
+            </ForEachChildElementPipe>
+  
 			<EchoPipe 
 				name="Return success message"
 				getInputFromFixedValue="file found and processed successfully"
