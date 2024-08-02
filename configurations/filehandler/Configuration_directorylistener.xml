@@ -16,8 +16,8 @@
 				<Exit name="READY" state="SUCCESS"  />
 
 			</Exits>
-			<CsvParserPipe name="parsecsv" fieldSeparator=";">
-				
+			<CsvParserPipe name="parsecsv" fieldSeparator=";" prettyPrint="true">
+
 			</CsvParserPipe>
 			<EchoPipe 
 				name="Return success message"
