@@ -10,7 +10,6 @@
 				errorFolder="c:\temp\error"
 				wildcard="*.csv"
 				createFolders="true"
-				fileTimeSensitive="true"
 				messageType="contents"/>
 		</Receiver>
 
@@ -23,7 +22,7 @@
 
 			<ForEachChildElementPipe name="xmlIterator" elementXPathExpression="csv/record">
                 <FixedQuerySender query="INSERT INTO PEOPLE (IDENTIFIER, ACCESSCODE , RECOVERYCODE , FIRSTNAME , LASTNAME , DEPARTMENT , LOCATION) VALUES(?{IDENTIFIER}, ?{ACCESSCODE} , ?{RECOVERYCODE} , ?{FIRSTNAME} , ?{LASTNAME} , ?{DEPARTMENT} , ?{LOCATION})">
-                    <Param name="IDENTIFIER"         xpathExpression="record/Indentifier"/>
+                    <Param name="IDENTIFIER"         xpathExpression="record/Identifier"/>
                     <Param name="ACCESSCODE"   xpathExpression="record/AccessCode"/>
                     <Param name="RECOVERYCODE"    xpathExpression="record/RecoveryCode"/>
                     <Param name="FIRSTNAME"     xpathExpression="record/FirstName"/>
@@ -32,7 +31,7 @@
                     <Param name="LOCATION"       xpathExpression="record/location"/>
                 </FixedQuerySender>
             </ForEachChildElementPipe>
-			
+
 			
 		</Pipeline>
 	</Adapter>
