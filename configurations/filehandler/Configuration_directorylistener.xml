@@ -6,8 +6,11 @@
 			<DirectoryListener 
 				inputFolder="c:\temp\input" 
 				inProcessFolder="c:\temp\inprocess" 
-				processedFolder="c:\temp\processed"  
+				processedFolder="c:\temp\processed" 
+				errorFolder="c:\temp\error"
+				wildcard="*.csv"
 				createFolders="true"
+				fileTimeSensitive="true"
 				messageType="contents"/>
 		</Receiver>
 
@@ -29,11 +32,7 @@
                     <Param name="LOCATION"       xpathExpression="record/location"/>
                 </FixedQuerySender>
             </ForEachChildElementPipe>
-  
-			<EchoPipe 
-				name="Return success message"
-				getInputFromFixedValue="file found and processed successfully"
-			/>
+			
 			
 		</Pipeline>
 	</Adapter>
